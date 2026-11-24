@@ -1,0 +1,51 @@
+UI AutoSetup prototype
+NOTICE: who wrote what, and the terms of each part (see LICENSE)
+================================================================
+
+1. Checklist Autofill, AutoSetup, and the code that joins the four tools
+   Author:  Oscar Coleman
+   Licence: MIT (LICENSE, section 1)
+   Files:   autofill/  (all of it, except autofill/review/ below)
+              including autofill/pages.js (the Awin UI pages the tools open),
+              autofill/tabs.js ("Just open the tabs"), autofill/setup/ (AutoSetup),
+              the settings page (autofill/options.*), and the tests in autofill/dev/
+            assets/autosetup*.png, assets/awin-fire*.*, assets/runner-peek.gif
+            In autofill/review/: content/hook.js, options-section.js, and the
+              changes to Optimus IR's files listed in part 3
+            In Moonfill's files: the changes listed in part 2
+            README.md, LICENSE, NOTICE
+
+2. Moonfill (Moonpull scans)
+   Author:  Rodier Sangibala
+   Source:  https://github.com/OptimusRodier/moonfill (branch dev)
+   Licence: Rodier's own terms (LICENSE, section 2). Moonfill's repository has no
+            licence file at the time of writing; ask Rodier before reusing it elsewhere.
+   Files:   background.js, content.js, salesforce.js, popup.html, popup.js, css/,
+            assets/ (Moonfill's own images), and Moonfill's entries in manifest.json
+   Changed here (by Oscar Coleman, MIT for these changes):
+     - manifest.json: the extension's name, version, icons, and the entries for the other tools
+     - background.js: one line at the end that loads autofill/background.js
+     - popup.html, css/style.css, assets/: the repository button's icon is assets/code.svg (drawn
+       for this project); unused styles, a stray copy of the stylesheet and unused images removed
+     - salesforce.js: the 🔎 IR button on Case pages (caseIdNow, caseMidNow, ensureCaseButton),
+       and the 🚀 and 🔎 buttons send the setup's and review's own messages (autofill/tabs.js)
+
+3. Internal Review (Optimus Internal Review, v0.2.23)
+   Author:  Kaio Da Mota
+   Licence: Kaio's own terms (LICENSE, section 3). The copy received had no licence file;
+            ask Kaio before reusing it elsewhere.
+   Files:   autofill/review/ (lib/, content/salesforce.js, content/awin-page.js,
+            background.js, panel.html, panel.js, panel.css, docs/, icon*.png, README.md), and the
+            ported tests autofill/dev/tests/review-checks, -pages, -chatter, -panel, -run
+   Changed here (by Oscar Coleman, MIT for these changes): loading it inside this
+   extension (paths, one wrapping function, the version line), its popup as a window
+   tied to the record and restyled, the MID from the record, the shared sign-in check and edit lock,
+   checking against the setup's Chatter note, page details from the setup's live pages,
+   faster page reads, and its settings as a block of the shared settings page. Details:
+   autofill/review/README.md.
+
+Third-party tools used only for development (not shipped in the extension):
+   jsdom (MIT), used by the tests in autofill/dev/, installed with npm.
+
+Trademarks: "Awin" and the Awin logo (assets/awin-logo.png and the pixel-fire images made
+from it) belong to Awin; they are used here only to identify Awin's own UI.

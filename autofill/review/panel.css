@@ -1,0 +1,53 @@
+body { margin: 0; min-width: 320px; font: 13px/1.45 -apple-system, "Segoe UI", system-ui, sans-serif; color: #181818; background: #f3f6f9; }
+header { background: #014486; color: #fff; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+header h1 { font-size: 14px; margin: 0; }
+header #v { font-weight: 400; opacity: .7; font-size: 12px; }
+header a { color: #cfe4f7; font-size: 12px; cursor: pointer; }
+section { padding: 8px 12px 0; }
+.box { background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 4px rgba(0,0,0,.15); margin-bottom: 10px; }
+.box h2 { font-size: 14px; margin: 0 0 2px; }
+.muted { color: #666; font-size: 12px; }
+.row { display: flex; flex-direction: column; gap: 3px; margin: 8px 0; }
+.row > span { font-weight: 600; }
+.pair { display: flex; gap: 6px; }
+.pair select { flex: 0 0 110px; }
+input[type="text"], select, textarea { border: 1px solid #c9c9c9; border-radius: 6px; padding: 6px 8px; font: inherit; width: 100%; box-sizing: border-box; }
+input.mid { font-size: 15px; font-weight: 600; letter-spacing: .03em; }
+.check { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; }
+.yn { display: flex; gap: 14px; }
+.ok-line { background: #e3f3e8; color: #1f6a37; border-radius: 6px; padding: 6px 8px; margin: 8px 0; }
+.warn-line { background: #fff4e5; color: #8a4b00; border-radius: 6px; padding: 6px 8px; margin: 8px 0; }
+.err { color: #bc2f32; font-weight: 600; margin-top: 6px; }
+button { border: 1px solid #0176d3; background: #fff; color: #014486; border-radius: 6px; padding: 5px 10px; cursor: pointer; font: 600 12px/1.2 inherit; margin: 6px 6px 0 0; }
+button.primary { background: #0176d3; color: #fff; }
+button:disabled { background: #c9c9c9; border-color: #c9c9c9; color: #fff; cursor: not-allowed; }
+.run { position: relative; border-left: 4px solid #0176d3; }
+.run.done { border-left-color: #2e844a; }
+.run.blocked, .run.failed { border-left-color: #bc2f32; }
+.run.waiting_sf { border-left-color: #d97706; }
+.run .status { font-weight: 600; }
+.run.done .status { color: #2e844a; }
+.run.blocked .status, .run.failed .status { color: #bc2f32; }
+.run.waiting_sf .status { color: #b45309; }
+.run .x { position: absolute; top: 4px; right: 6px; border: 0; background: none; color: #666; font-size: 16px; margin: 0; padding: 0 4px; }
+.steps { list-style: none; padding: 0; margin: 6px 0 0; }
+.steps li { display: flex; gap: 6px; padding: 2px 0; border-bottom: 1px solid #f2f2f2; }
+.steps li .ic { flex: 0 0 18px; }
+.steps li .d { color: #666; font-size: 12px; display: block; word-break: break-word; }
+.steps li.fail .d { color: #bc2f32; }
+.counts { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0; }
+.counts span { padding: 1px 8px; border-radius: 999px; font-weight: 600; font-size: 12px; }
+.counts .pass { background: #e3f3e8; color: #2e844a; } .counts .fail { background: #fbe3e3; color: #bc2f32; }
+.counts .review { background: #fff1d6; color: #8a4b00; } .counts .skipped { background: #eee; color: #555; }
+details { margin-top: 6px; } summary { cursor: pointer; font-weight: 600; color: #014486; }
+.checks { list-style: none; padding: 0; margin: 4px 0; }
+.checks li { padding: 2px 0; font-size: 12px; }
+.checks .area { font-weight: 700; margin-top: 6px; text-transform: uppercase; font-size: 11px; color: #014486; }
+.spin { display: inline-block; width: 10px; height: 10px; border: 2px solid #cfe4f7; border-top-color: #0176d3; border-radius: 50%; animation: s 1s linear infinite; }
+@keyframes s { to { transform: rotate(360deg); } }
+.empty { padding: 0 14px 10px; color: #555; }
+pre { white-space: pre-wrap; font-size: 11px; background: #f6f6f6; padding: 6px; border-radius: 6px; margin: 6px 0 0; }
+/* AutoSetup prototype: the panel sits in its own small window, in the Checklist Autofill's blue */
+header { position: sticky; top: 0; z-index: 1; }
+button.tabs-only { background: none; border-color: transparent; color: #0176d3; font-weight: 400; text-decoration: underline; padding-left: 0; }
+button.by-hand { display: block; margin: 6px 0; }

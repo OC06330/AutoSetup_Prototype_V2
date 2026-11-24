@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "UI_AutoSetup_Prototype",
+  "version": "3.0.13",
+  "version_name": "3.0.13 AutoSetup prototype",
+  "description": "Run Moonpull scans from Salesforce in one click, fill in and save the Technical Checklist, set up a new programme in the Awin UI and run its Internal Review.",
+  "permissions": ["tabs", "storage", "activeTab", "scripting", "webRequest", "alarms", "notifications", "tabGroups"],
+  "host_permissions": [
+    "https://forms.office.com/*",
+    "https://forms.cloud.microsoft/*",
+    "https://awin.lightning.force.com/*",
+    "https://zanox.sharepoint.com/*",
+    "https://ui.awin.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "assets/autosetup16.png",
+      "48": "assets/autosetup48.png",
+      "128": "assets/autosetup128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/autosetup16.png",
+    "48": "assets/autosetup48.png",
+    "128": "assets/autosetup128.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://forms.office.com/*", "https://forms.cloud.microsoft/*"],
+      "js": ["content.js"]
+    },
+    {
+      "matches": ["https://awin.lightning.force.com/*"],
+      "js": ["salesforce.js"]
+    },
+    {
+      "matches": ["https://awin.lightning.force.com/*", "file:///*/autofill/dev/mock/*.html*"],
+      "js": ["autofill/fields.js", "autofill/config.js", "autofill/settings.js", "autofill/templates.js", "autofill/engine.js", "autofill/content.js", "autofill/setup/form.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://ui.awin.com/*"],
+      "js": ["autofill/config.js", "autofill/engine.js", "autofill/setup/fill.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://awin.lightning.force.com/*"],
+      "js": ["autofill/review/lib/log.js", "autofill/review/lib/fields.js", "autofill/review/lib/checks.js", "autofill/review/content/salesforce.js", "autofill/review/content/hook.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "options_ui": { "page": "autofill/options.html", "open_in_tab": true },
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "web_accessible_resources": [
+    { "resources": ["autofill/options.html", "assets/awin-fire.gif", "assets/awin-fire-still.png", "assets/runner-peek.gif"], "matches": ["https://awin.lightning.force.com/*"] }
+  ]
+}
