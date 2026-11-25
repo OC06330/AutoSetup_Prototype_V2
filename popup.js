@@ -140,7 +140,7 @@ function tick() {
 
 document.addEventListener("DOMContentLoaded", () => {
   const v = document.querySelector(".version");
-  if (v) v.textContent = "v" + (chrome.runtime.getManifest().version_name || chrome.runtime.getManifest().version);
+  if (v) v.textContent = "v" + chrome.runtime.getManifest().version;
   render();
   setInterval(tick, 1000);
   chrome.storage.onChanged.addListener((changes, area) => {
@@ -157,10 +157,5 @@ document.addEventListener("DOMContentLoaded", () => {
     await chrome.storage.local.remove(keys);
   });
 
-  document.getElementById("portfolioBtn").addEventListener("click", () => {
-    chrome.tabs.create({ url: "https://rodier-portfolio.vercel.app/" });
-  });
-  document.getElementById("githubBtn").addEventListener("click", () => {
-    chrome.tabs.create({ url: "https://github.com/OptimusRodier/moonfill" });
-  });
+  document.getElementById("settingsBtn").addEventListener("click", () => chrome.runtime.openOptionsPage());
 });

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "UI_AutoSetup_Prototype",
-  "version": "3.0.13",
-  "version_name": "3.0.13 AutoSetup prototype",
+  "version": "3.0.14",
+  "version_name": "3.0.14 AutoSetup prototype",
   "description": "Run Moonpull scans from Salesforce in one click, fill in and save the Technical Checklist, set up a new programme in the Awin UI and run its Internal Review.",
   "permissions": ["tabs", "storage", "activeTab", "scripting", "webRequest", "alarms", "notifications", "tabGroups"],
   "host_permissions": [

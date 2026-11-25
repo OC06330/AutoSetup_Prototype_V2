@@ -4,7 +4,7 @@ NOTICE: who wrote what, and the terms of each part (see LICENSE)
 
 1. Checklist Autofill, AutoSetup, and the code that joins the four tools
    Author:  Oscar Coleman
-   Licence: MIT (LICENSE, section 1)
+   Licence: Awin staff only (LICENSE, section 1)
    Files:   autofill/  (all of it, except autofill/review/ below)
               including autofill/pages.js (the Awin UI pages the tools open),
               autofill/tabs.js ("Just open the tabs"), autofill/setup/ (AutoSetup),
@@ -22,11 +22,11 @@ NOTICE: who wrote what, and the terms of each part (see LICENSE)
             licence file at the time of writing; ask Rodier before reusing it elsewhere.
    Files:   background.js, content.js, salesforce.js, popup.html, popup.js, css/,
             assets/ (Moonfill's own images), and Moonfill's entries in manifest.json
-   Changed here (by Oscar Coleman, MIT for these changes):
+   Changed here (by Oscar Coleman, under LICENSE section 1):
      - manifest.json: the extension's name, version, icons, and the entries for the other tools
      - background.js: one line at the end that loads autofill/background.js
-     - popup.html, css/style.css, assets/: the repository button's icon is assets/code.svg (drawn
-       for this project); unused styles, a stray copy of the stylesheet and unused images removed
+     - popup.html, popup.js, css/style.css: the toolbar popup redesigned for the four tools (the
+       scan list kept), with a Settings button; a stray copy of the stylesheet and unused images removed
      - salesforce.js: the 🔎 IR button on Case pages (caseIdNow, caseMidNow, ensureCaseButton),
        and the 🚀 and 🔎 buttons send the setup's and review's own messages (autofill/tabs.js)
 
@@ -37,7 +37,7 @@ NOTICE: who wrote what, and the terms of each part (see LICENSE)
    Files:   autofill/review/ (lib/, content/salesforce.js, content/awin-page.js,
             background.js, panel.html, panel.js, panel.css, docs/, icon*.png, README.md), and the
             ported tests autofill/dev/tests/review-checks, -pages, -chatter, -panel, -run
-   Changed here (by Oscar Coleman, MIT for these changes): loading it inside this
+   Changed here (by Oscar Coleman, under LICENSE section 1): loading it inside this
    extension (paths, one wrapping function, the version line), its popup as a window
    tied to the record and restyled, the MID from the record, the shared sign-in check and edit lock,
    checking against the setup's Chatter note, page details from the setup's live pages,

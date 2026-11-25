@@ -9,6 +9,8 @@
 | **🚀 AutoSetup** (New Implementation setup) | Sets up a new programme in the Awin UI from the record: fills and saves the ten setup pages one by one, then posts a summary to Chatter | **🚀 New Implementation** on the record | **Oscar Coleman** |
 | **🔎 Internal Review** (Optimus IR) | Reviews the programme in the Awin UI against the setup's Chatter note, fixes what it may, deletes the test transactions, fills blank record fields and posts a short report to Chatter for the integrator | **🔎 IR** on the record | **Kaio Da Mota** |
 
+**Questions?** See the [FAQ](FAQ.md).
+
 Before, a TC filled in the Moonpull form and copied its result from Teams, went through the Technical Checklist field by field, opened ten Awin pages to set a programme up, and checked them all again for the Internal Review. Now each of those is one click, and the four work together: Moonfill fills the scan fields the checklist leaves alone, the setup's Chatter note is what the review checks against, and no two of them edit the record at the same time.
 
 This is the **prototype**: AutoSetup and the Internal Review are being tested here before they join the team release (Moonfill and the Checklist Autofill only).
@@ -21,7 +23,7 @@ This is the **prototype**: AutoSetup and the Internal Review are being tested he
 - **Nothing to remember.** The program, MID, country, offer, commission and validation period are read from the Salesforce record (and, for the review, from the setup's Chatter note). The checklist values are the team's agreed answers.
 - **Work on something else.** Scans, setups and reviews run in background tabs while you use other tabs and apps.
 - **Several scans at once.** Start as many as you like, for the same client or different ones. Each result goes to its own record.
-- **Always visible.** The Moonfill icon shows every scan; the checklist panel says exactly what it filled; the setup and the review show each page's progress and post a summary to Chatter.
+- **Always visible.** The extension's toolbar button shows every scan; the checklist panel says exactly what it filled; the setup and the review show each page's progress and post a summary to Chatter.
 - **Safe by design.** Moonfill checks the result belongs to the MID you scanned. The checklist checks nothing else on the record changed before saving. The setup and the review check you're signed in to Awin and work on that one MID only, and the review deletes only that MID's test transactions. If a check fails, nothing is posted or saved.
 - **A safety net.** **Force paste** and **Copy result** for scans; **Fill only** for the checklist and the setup; **Retry failed pages** for the setup; **Retry Salesforce + Chatter** for the review.
 - **Your way.** One **Settings** page for all four tools: shared settings first (menu style, reading client websites, date format), then one block per tool.
@@ -37,7 +39,7 @@ This is the **prototype**: AutoSetup and the Internal Review are being tested he
 3. Moonfill waits for the scan to finish. You don't need to do anything.
 4. When the result is ready, Moonfill opens the record in the background, posts the result to its **Chatter** feed, fills the scan fields (see [Fields filled by both](#fields-filled-by-both)) and shows a notification.
 
-**To follow your scans:** click the Moonfill icon in the toolbar.
+**To follow your scans:** click the extension's button in the toolbar (the AutoSetup icon). It lists the four tools, your Moonpull scans (with **History**) and a **Settings** button.
 
 | What you see | What it means |
 |---|---|
@@ -149,7 +151,7 @@ Pages: 8 saved, 2 skipped.
 SingleView Setup: MasterTag Enabled, New.
 Implementation Status: Consultation (was Not Started).
 
-Posted by UI_AutoSetup_Prototype v3.0.13 AutoSetup prototype.
+Posted by UI_AutoSetup_Prototype v3.0.14 AutoSetup prototype.
 ```
 
 While the setup runs, the **Awin logo** at the front of the progress bar is a little pixel fire, flickering in the logo's own shape and colours. It stands still when the run ends.
@@ -223,7 +225,7 @@ Moonfill is not in the browser store yet, so it is installed from the folder you
 5. **Stay signed in.** If your Salesforce or Microsoft 365 session expires, Moonfill can't read the result or open the record. Sign in again and use Force paste if needed.
 6. **Don't type in the Chatter box of that record** while its result is being posted.
 7. **Don't scan the same MID twice by accident.** Each click is a new scan and gets its own post.
-8. **Check the notification.** If you see "scan failed" or "result ready", open the Moonfill icon.
+8. **Check the notification.** If you see "scan failed" or "result ready", click the extension's toolbar button.
 
 **Technical Checklist**
 1. **Save or cancel your own edits first.** The checklist won't start while the record is in edit mode, because Salesforce's Save would also save your unrelated changes.
@@ -239,7 +241,7 @@ Moonfill is not in the browser store yet, so it is installed from the folder you
 | Message | What to do |
 |---|---|
 | Result ready · waiting for the browser | Bring Edge or Chrome to the front. It posts by itself within a few seconds. Or click **Force paste**. |
-| Failed: Chatter tab not found / "Share an update..." box did not appear | Open the Moonfill icon and click **Force paste**. If it fails again, click **Copy result** and paste it into Chatter yourself. |
+| Failed: Chatter tab not found / "Share an update..." box did not appear | Click the extension's toolbar button, then **Force paste**. If it fails again, click **Copy result** and paste it into Chatter yourself. |
 | Failed: no result after 10 minutes | The scan may have taken longer or failed. Check the Teams message. |
 | Failed: result is for another MID | Nothing was posted. Check the Teams message and tell the project owner. |
 | Can't read the result folder | Sign in to Microsoft 365 in this browser and check that you have access to the results folder. |
@@ -302,7 +304,8 @@ The combined extension, and the work that makes the four tools fit together (the
 ## Licence
 
 See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
-- **Checklist Autofill, AutoSetup and the code that joins the four tools** (Oscar Coleman): **MIT**.
+- **For Awin staff only.** Neither the extension nor any part of it may be used or shared outside Awin.
+- **Checklist Autofill, AutoSetup and the code that joins the four tools** (Oscar Coleman): Awin staff may use, copy and change it for their work for Awin, while they work for Awin (LICENSE, section 1).
 - **Moonfill** (Rodier Sangibala) and the **Internal Review** (Kaio Da Mota): each author's own terms. Neither has published a licence yet, so ask the author before reusing their code outside this project.
 
 ## Support
@@ -310,6 +313,11 @@ See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 Questions, bugs and ideas: contact the tool's author above, or the project owner (Oscar Coleman). For Moonfill itself: [GitHub Issues](https://github.com/OptimusRodier/moonfill).
 
 ## What's new
+
+**New toolbar popup, FAQ, Awin staff only (3.0.14, 25 November 2026)**
+- Clicking the extension's toolbar button now shows **UI AutoSetup**, not the old Moonfill menu: the four tools and the button that starts each on the record, your Moonpull scans as before (Force paste, Copy result, History), a **Settings** button and the credits. It follows the Settings page's look, light or dark.
+- **[FAQ](FAQ.md)** for TCs and team leads.
+- **Licence: for Awin staff only.** Oscar Coleman's code may be used, copied and changed by Awin staff for their work for Awin, and isn't to be shared outside Awin (LICENSE, section 1). Moonfill and the Internal Review stay under their authors' own terms.
 
 **This repository (3.0.13, 24 November 2026)**
 - AutoSetup_Prototype_V2 starts here, with 3.0.13 as its first version.
