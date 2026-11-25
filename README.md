@@ -151,7 +151,7 @@ Pages: 8 saved, 2 skipped.
 SingleView Setup: MasterTag Enabled, New.
 Implementation Status: Consultation (was Not Started).
 
-Posted by UI_AutoSetup_Prototype v3.0.14 AutoSetup prototype.
+Posted by UI_AutoSetup_Prototype v3.0.15 AutoSetup prototype.
 ```
 
 While the setup runs, the **Awin logo** at the front of the progress bar is a little pixel fire, flickering in the logo's own shape and colours. It stands still when the run ends.
@@ -163,7 +163,8 @@ While the setup runs, the **Awin logo** at the front of the progress bar is a li
 1. The MID comes from the record, and the panel checks you're signed in to Awin (**Sign in to Awin** if not).
 2. It reads the record's **marketing checklist** first, the same fields the setup reads: Platform Offer, Commission type and Commission Amount, and Auto validation period. The **setup's own Chatter note** ("New Implementation setup for MID …") is the backup for anything the checklist doesn't say. The note also tells the review which setup pages needed a look, and its validation value stands when it matches the record ("already set, kept" on Access). A post titled **Implementation Checklist** fills what neither says (the contract's publisher approval; otherwise approval is manual, as the setup sets it). The tracking fee is optional. Anything missing gets a small form, and any differences between the sources are shown in the panel. If you know the details aren't there, **Enter the details by hand** opens every field at once and stops the Chatter search. **Run Internal Review** is never greyed out: clicked early, it says what's missing, or starts by itself as soon as the record has been read.
 3. **Run Internal Review** reads 11 Awin UI pages in a collapsed **IR <MID>** tab group (each tab closes as soon as it's done), all at once where it can, runs the checks and fixes what it may: dedup pair in the query string append, awc, accepted domains (Shopify's myshopify domain too), SingleView, mobile tracking, test publishers 111 and 45628, validation period and manual approval. Each fix is saved and read back.
-4. It deletes the programme's test transactions, fills blank record fields (voucher tracking, custom parameters, eCommerce platform, dedup parameter and channel, Link Builder, MT plugins activated, Successful Tracking Test), and posts a short report to Chatter that @mentions the integrator. The Tech sign-off stays with them.
+4. It deletes the programme's test transactions, last, once everything else is done. If the report has anything for a person to check (a fix that didn't stick, a **To check**, a page not checked, or a test transaction that isn't in Tracking diagnosis), the review **keeps the test transactions** and waits. The panel lists what to check, with **Carry on and delete test transactions** and **Stop: keep them**. Either way it then updates the record and posts the report, which says whether they were deleted or kept. If everything passes, they're deleted straight away, as before.
+5. It fills blank record fields (voucher tracking, custom parameters, eCommerce platform, dedup parameter and channel, Link Builder, MT plugins activated, Successful Tracking Test), and posts a short report to Chatter that @mentions the integrator. The Tech sign-off stays with them.
 
 Shift-click 🔎 IR, or **Just open the IR tabs** in the panel, to only open the 11 IR pages as before. Its settings (region paths, history) are in its own block on the Settings page; its date format and site check are the shared ones. Full detail: [`autofill/review/README.md`](autofill/review/README.md).
 
@@ -313,6 +314,9 @@ See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 Questions, bugs and ideas: contact the tool's author above, or the project owner (Oscar Coleman). For Moonfill itself: [GitHub Issues](https://github.com/OptimusRodier/moonfill).
 
 ## What's new
+
+**The review keeps the test transactions when something needs a look (3.0.15, 25 November 2026)**
+- The Internal Review now deletes the test transactions last. If its report has anything for a person to check (a fix that didn't stick, a **To check**, a page not checked, or a test transaction that isn't in Tracking diagnosis), the review **keeps the test transactions** and waits. The panel lists what to check, with **Carry on and delete test transactions** and **Stop: keep them**. Either way it then updates the record and posts the report, which says whether they were deleted or kept. If everything passes, they're deleted straight away, as before.
 
 **New toolbar popup, FAQ, Awin staff only (3.0.14, 25 November 2026)**
 - Clicking the extension's toolbar button now shows **UI AutoSetup**, not the old Moonfill menu: the four tools and the button that starts each on the record, your Moonpull scans as before (Force paste, Copy result, History), a **Settings** button and the credits. It follows the Settings page's look, light or dark.

@@ -16,7 +16,7 @@
 > - **Page details from the setup's live pages:** Link Builder `#DeeplinkEnabled`, landing page `#GlobalClickThroughPage`, append `#ClickAppend`; pre-join publishers as tick boxes (value = the publisher id; none = already pre-joined); mobile tracking by the `strategy` radio "Tracking is implemented on mobile site"; approval by the "Approval of Publishers Joining" select, read and set by its option text.
 > - **Tabs:** as in Optimus IR, each Awin tab closes as soon as its read or fix is done, in a collapsed **IR \<MID\>** group (kept that way at the user's request, after trying the setup's open-group style in v3.0.5). They now open in the record's window.
 > - **Main settings no longer times out:** it counts as drawn as soon as `#MainWebsiteURL` or `#ClickAppend` shows (the labels may not match word for word); a page that keeps "loading" is read once it's drawn; a page with no sign of being drawn is taken as it is after 12 s; labels are found without measuring every element of the page; and Main settings gets the same two tries as the other pages.
-> - The Chatter report's first line names both versions: `Internal Review | MID … | Optimus IR v0.2.23 (3.0.14 AutoSetup prototype)`.
+> - The Chatter report's first line names both versions: `Internal Review | MID … | Optimus IR v0.2.23 (3.0.15 AutoSetup prototype)`.
 > - Tests run with the prototype's: `cd autofill/dev && npm test` (`tests/review-*.test.cjs`). In the paths below, `lib/`, `content/`, `background.js` and `popup.*` are under `autofill/review/` (`popup.*` is `panel.*`).
 
 **Runs the Internal Review of one Awin programme from its Salesforce Implementation record, in the background.**
@@ -26,7 +26,7 @@ Open the Implementation record and click the extension icon. The MID field is re
 1. reads the contract inputs from the record's Chatter post titled **Implementation Checklist** (a form appears only for what's missing);
 2. reads the record and 11 Awin UI pages in a collapsed **IR \<MID\>** tab group. A page that reloads while being read is retried up to 3 times, and no page can hang the run: each read has a time limit, after which the page is skipped with a note;
 3. runs the checks and **fixes the Awin UI automatically**: each fix is saved, the page reloaded and the value read back;
-4. deletes the programme's test transactions (after the pending transaction was read);
+4. deletes the programme's test transactions, last, after every other read and fix. If the report would ask a person to check anything (a fix that failed, a **To check**, a page **Not checked**, or a test transaction missing from Tracking diagnosis), the run is **held** instead: the panel lists what to check, with **Carry on and delete test transactions** and **Stop: keep them**. A held run survives the background process stopping, and only one review per MID can be held or running. Either choice then goes on to step 5, and the report says `Test transactions deleted […] | OK` or `Test transactions kept for a manual check […] | CHECK`;
 5. updates the Salesforce record (see below) and posts a short report to Chatter, ending with an @mention of the record's integrator.
 
 The Implementation Status is not changed: the Tech sign-off stays with the integrator, who also talks to the client.
@@ -158,7 +158,7 @@ A review can fail, but it always ends.
 
 - **One programme only:** the MID you type, which must match the record's Awin Program ID.
 - **Sign-in:** if any page asks for a sign-in, the run stops and shows that tab.
-- **Deletes only** the test transaction rows listed for this MID on Test transactions. Nothing else is deleted; Delete/Reset buttons elsewhere are never clicked.
+- **Deletes only** the test transaction rows listed for this MID on Test transactions, and only when nothing needs a look or you choose **Carry on and delete**. Nothing else is deleted; Delete/Reset buttons elsewhere are never clicked.
 - **Salesforce:** the record must be in front for the field update and the Chatter post (Lightning doesn't draw hidden pages). If it isn't, the step waits and retries when the browser gets focus, or click **Retry Salesforce + Chatter**. It won't start if the record is already in edit mode.
 - **Advertiser site:** the website and landing page on the record are opened in a background tab only to detect the platform, once allowed in **Options**. Nothing is clicked there.
 - **Data:** runs are stored in this browser profile (last 30). **Describe pages** records labels, ids and column names, never values.

@@ -627,7 +627,7 @@
 
   // Only what was adjusted (OK / FAILED) and what needs a person (CHECK / To check).
   // What was already right is not listed.
-  function chatterText(run) {
+  function reportLines(run) {
     const plan = run.plan || { changes: [] };
     const r = run.result || { checks: [] };
     const applied = run.applied || [];
@@ -635,6 +635,7 @@
     for (const c of plan.changes) {
       const a = applied.find((x) => x.id === c.id);
       if (a && a.verified && a.noop) continue; // was already right: nothing adjusted
+      if (c.target === "deleteTestTx" && run.hold && run.hold.choice === "keep") { review.push(`Test transactions kept for a manual check [${c.from || "—"}] | CHECK`); continue; }
       (a && a.verified ? done : review).push(changeLine(c, a));
     }
     if (run.sfUpdate) {
@@ -653,12 +654,25 @@
     }
     const skipped = r.checks.filter((c) => c.result === "skipped" && !/not required|filled by default/.test(c.note));
     if (skipped.length) review.push(`Not checked: ${skipped.map((c) => c.check).join(", ")}`);
+    return { done, review };
+  }
+
+  // Before the test transactions are deleted (the last Awin step): what the report would ask a
+  // person to check. Empty: they are deleted at once. Anything listed: the review holds them until the
+  // TC chooses. The deletion itself and Salesforce (not done yet) don't count.
+  function needsLook(run) {
+    const plan = run.plan || { changes: [] };
+    return reportLines({ ...run, plan: { ...plan, changes: plan.changes.filter((c) => c.target !== "deleteTestTx") }, sfUpdate: null, hold: null }).review;
+  }
+
+  function chatterText(run) {
+    const { done, review } = reportLines(run);
     const L = [`Internal Review | MID ${run.awinId} | Optimus IR v${run.version}`, ...done, ...review];
     if (!done.length && !review.length) L.push("Nothing to adjust, nothing to review.");
     return L.join("\n");
   }
 
-  const api = { runChecks, chatterText, parseChecklist, parseSetupNote, parseRecordChecklist, mergeInputs, missingInputs, inputsLine, compareUrl, normUrl, domainOf, num, yesNo, offerName, parseAppend, parseAnalytics, parseMoney };
+  const api = { runChecks, chatterText, needsLook, parseChecklist, parseSetupNote, parseRecordChecklist, mergeInputs, missingInputs, inputsLine, compareUrl, normUrl, domainOf, num, yesNo, offerName, parseAppend, parseAnalytics, parseMoney };
   root.OIRChecks = api;
   if (typeof module !== "undefined") module.exports = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

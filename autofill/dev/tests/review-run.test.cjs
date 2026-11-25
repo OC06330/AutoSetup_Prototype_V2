@@ -130,20 +130,32 @@ vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(root, "autofill/review/background.js"), "utf8"), ctx, { filename: "autofill/review/background.js" });
 
 const send = (msg) => new Promise((res) => { for (const f of listeners.msg) if (f(msg, {}, res) === true) return; });
-(async () => {
-  const inputs = { commissionType: "Percentage", commissionValue: "8",
-    autoApprove: false, validationDays: 45, trackingFeeType: "Percentage", trackingFeeValue: "30", offerOverride: "Accelerate" };
+const RECORD = "https://awin.lightning.force.com/lightning/r/TSE__c/a0CTr0000E880fGMQQ/view";
+const baseInputs = { commissionType: "Percentage", commissionValue: "8",
+  autoApprove: false, validationDays: 45, trackingFeeType: "Percentage", trackingFeeValue: "30", offerOverride: "Accelerate" };
+async function start(inputs) {
+  state.testtx.rows = [{ ref: "T1" }, { ref: "T2" }];
   const res = await send({ action: "oirStart", mid: "131530", signedIn: true, inputs, tabId: 99, inputsSource: "checklist",
-    collected: { recordId: "a0CTr0000E880fGMQQ", recordUrl: "https://awin.lightning.force.com/lightning/r/TSE__c/a0CTr0000E880fGMQQ/view", sf: { awinId: "131530", name: "Breggz - NL", integrator: "Claudio Valdes" } } });
+    collected: { recordId: "a0CTr0000E880fGMQQ", recordUrl: RECORD, sf: { awinId: "131530", name: "Breggz - NL", integrator: "Claudio Valdes" } } });
   if (!res.ok) { console.error("start failed", res); process.exit(1); }
-  tabs.set(99, { id: 99, url: "https://awin.lightning.force.com/lightning/r/TSE__c/a0CTr0000E880fGMQQ/view", windowId: 1 });
-  const key = "oirRun_" + res.runId;
+  tabs.set(99, { id: 99, url: RECORD, windowId: 1 });
+  return "oirRun_" + res.runId;
+}
+async function until(key, states) {
   let run;
-  for (let i = 0; i < 900; i++) { await sleep(100); run = store[key]; if (run && ["done", "failed", "waiting_sf", "blocked"].includes(run.state)) break; }
+  for (let i = 0; i < 900; i++) { await sleep(100); run = store[key]; if (run && states.includes(run.state)) break; }
+  return run;
+}
+const ENDED = ["done", "failed", "waiting_sf", "blocked"];
+(async () => {
+  const key = await start(baseInputs);
+  const run = await until(key, ENDED);
   const at = (e) => (events.find(([, x]) => x.startsWith(e)) || [Infinity])[0];
+  const lastFix = Math.max(...events.filter(([, e]) => /^FIX /.test(e)).map(([ms]) => ms));
   const checks = [
     ["run ended", ["done", "waiting_sf"].includes(run.state), run.state + (run.error ? ": " + run.error : "")],
-    ["test transactions deleted after the pending + wizard reads", at("DELETE") > at("read validate") && at("DELETE") > at("read wizard"), `delete ${at("DELETE")} ms, validate ${at("read validate")}, wizard ${at("read wizard")}`],
+    ["nothing to check: test transactions deleted without stopping", !run.hold && at("DELETE") < Infinity, ""],
+    ["test transactions deleted last, after every read and fix", at("DELETE") > at("read validate") && at("DELETE") > at("read wizard") && at("DELETE") > lastFix, `delete ${at("DELETE")} ms, validate ${at("read validate")}, wizard ${at("read wizard")}, last fix ${lastFix}`],
     ["a fix starts before the slowest read ends (parallel)", Math.min(at("FIX mobile"), at("FIX migrated"), at("FIX prejoin")) < at("read wizard"), `first fix ${Math.min(at("FIX mobile"), at("FIX migrated"), at("FIX prejoin"))} ms, wizard read ${at("read wizard")} ms`],
     ["Main settings: one submit with the Shopify domain", events.some(([, e]) => /FIX main \(one submit\): .*acceptedDomains/.test(e)), ""],
     ["Shopify domain: " + (SLOW ? "*.myshopify.com after the wait" : "the internal domain"),
@@ -156,10 +168,37 @@ const send = (msg) => new Promise((res) => { for (const f of listeners.msg) if (
     ["group named \"IR 131530\", collapsed", groupTitles.some((o) => o.title === "IR 131530" && o.collapsed === true), JSON.stringify(groupTitles)],
     ["every Awin tab closed after the run", ![...tabs.values()].some((t) => /ui\.awin\.com/.test(t.url || "")), JSON.stringify([...tabs.values()].filter((t) => /ui\.awin\.com/.test(t.url || "")).map((t) => t.url))]
   ];
-  let failed = 0;
-  for (const [name, okk, detail] of checks) { console.log(`${okk ? "ok  " : "FAIL"} ${name}${detail ? " · " + detail : ""}`); if (!okk) failed++; }
-  console.log(`total ${t()} ms (serial page time would be ≥ ${Object.values(DELAY).reduce((a, b) => a + b, 0)} ms of reads alone)`);
+  if (!/^Internal Review \| MID 131530 \| Optimus IR v0\.2\.23 \(/.test(run.chatterText || "")) checks.push(["Chatter report names the IR version and the build", false, ""]);
   console.log(run.chatterText);
-  if (!/^Internal Review \| MID 131530 \| Optimus IR v0\.2\.23 \(/.test(run.chatterText || "")) { console.log("FAIL Chatter report names the IR version and the build"); failed++; }
+
+  // something needs a look (the Fee manager's tracking fee differs, which the review never changes):
+  // the run holds the test transactions until the TC chooses
+  const count = (e) => events.filter(([, x]) => x === e).length;
+  for (const choice of ["delete", "keep"]) {
+    const deletes = count("DELETE test transactions"), posts = count("SF oirPostChatter");
+    const k = await start({ ...baseInputs, trackingFeeValue: "25" });
+    const held = await until(k, ["held", ...ENDED]);
+    checks.push(
+      [`${choice}: held before deleting`, held.state === "held" && held.hold && held.hold.refs === "T1, T2" && held.hold.look.some((l) => /Tracking fee/.test(l)), held.state + " " + JSON.stringify(held.hold)],
+      [`${choice}: nothing deleted or posted while held`, count("DELETE test transactions") === deletes && count("SF oirPostChatter") === posts && state.testtx.rows.length === 2, ""],
+      [`${choice}: no Awin tab left open while held`, ![...tabs.values()].some((t) => /ui\.awin\.com/.test(t.url || "")), ""]);
+    const again = await send({ action: "oirStart", mid: "131530", signedIn: true, inputs: baseInputs, tabId: 99,
+      collected: { recordId: "a0CTr0000E880fGMQQ", recordUrl: RECORD, sf: { awinId: "131530" } } });
+    checks.push([`${choice}: no second review of the MID while one is held`, again.ok === false && /waiting for you/.test(again.error), JSON.stringify(again)]);
+    const r = await send({ action: "oirResume", runId: k.slice(7), choice });
+    const end = await until(k, ENDED);
+    const deleted = count("DELETE test transactions") > deletes;
+    checks.push(
+      [`${choice}: resumed and finished`, r.ok && ["done", "waiting_sf"].includes(end.state), end.state],
+      [`${choice}: test transactions ${choice === "delete" ? "deleted" : "kept"}`, choice === "delete" ? deleted && state.testtx.rows.length === 0 : !deleted && state.testtx.rows.length === 2, ""],
+      [`${choice}: report says so`, choice === "delete" ? /Test transactions deleted \[T1, T2\] \| OK/.test(end.chatterText) : /Test transactions kept for a manual check \[T1, T2\] \| CHECK/.test(end.chatterText), end.chatterText],
+      [`${choice}: report lists what needed a look`, /To check: Tracking fee/.test(end.chatterText), ""]);
+    const second = await send({ action: "oirResume", runId: k.slice(7), choice });
+    checks.push([`${choice}: a second click does nothing`, second.ok === false, JSON.stringify(second)]);
+  }
+
+  let failed = 0;
+  for (const [name, okk, detail] of checks) { console.log(`${okk ? "ok  " : "FAIL"} ${name}${detail && !okk ? " · " + detail : ""}`); if (!okk) failed++; }
+  console.log(`total ${t()} ms`);
   process.exit(failed ? 1 : 0);
 })();

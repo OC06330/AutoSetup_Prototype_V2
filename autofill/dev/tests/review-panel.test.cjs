@@ -14,9 +14,9 @@ function popup(runs) {
   const html = fs.readFileSync(path.join(root, "panel.html"), "utf8").replace(/<script[^>]*><\/script>/g, "");
   const dom = new JSDOM(html, { runScripts: "outside-only", url: "chrome-extension://x/popup.html" });
   const w = dom.window;
-  const local = Object.assign({}, runs), session = {}, sent = [];
+  const local = Object.assign({}, runs), session = {}, sent = [], msgs = [];
   w.chrome = {
-    runtime: { getManifest: () => ({ version: "test" }), sendMessage: async (m) => { sent.push(m.action); return { ok: true, runId: "r2" }; }, openOptionsPage: () => {} },
+    runtime: { getManifest: () => ({ version: "test" }), sendMessage: async (m) => { sent.push(m.action); msgs.push(m); return { ok: true, runId: "r2" }; }, openOptionsPage: () => {} },
     tabs: {
       query: async () => [{ id: 7, url: `https://awin.lightning.force.com/lightning/r/TSE__c/${REC}/view` }],
       sendMessage: async (id, m) => {
@@ -36,7 +36,7 @@ function popup(runs) {
   for (const f of ["lib/log.js", "lib/fields.js", "lib/checks.js", "panel.js"]) w.eval(fs.readFileSync(path.join(root, f), "utf8"));
   w.console.info = () => {};
   w.document.dispatchEvent(new w.Event("DOMContentLoaded"));
-  return { w, sent, session };
+  return { w, sent, session, msgs };
 }
 const running = { [`oirRun_r1`]: { id: "r1", recordId: REC, awinId: "131530", state: "applying", startedAt: Date.now(), steps: [], inputs: {}, log: [] } };
 
@@ -62,4 +62,23 @@ const running = { [`oirRun_r1`]: { id: "r1", recordId: REC, awinId: "131530", st
   await sleep(300);
   ok(p.sent.includes("oirStart") && !p.session.oirDraft && !d.querySelector('input[name="mid"]') && /started/.test(d.getElementById("start").textContent),
     "after Run: draft removed, form replaced by 'started' + Start a new review");
+
+  // 3. a review held before deleting the test transactions: what to check, and the two choices
+  for (const [label, choice] of [["Carry on and delete test transactions", "delete"], ["Stop: keep them", "keep"]]) {
+    const held = { oirRun_r3: { id: "r3", recordId: REC, awinId: "131530", state: "held", startedAt: Date.now(), inputs: {}, log: [],
+      steps: [{ key: "hold", label: "Test transactions: kept until you choose", status: "hold", detail: "1 thing(s) to check first" }],
+      hold: { refs: "T1, T2", look: ["To check: Tracking fee 30 (expected 25 (checklist))"], at: Date.now() } } };
+    p = popup(held);
+    await sleep(300);
+    const doc = p.w.document, card = doc.querySelector(".run.held");
+    ok(card && /Waiting for you/.test(card.textContent) && /T1, T2/.test(card.textContent) && /To check: Tracking fee 30/.test(card.textContent),
+      `held (${choice}): the card shows the kept test transactions and what to check`);
+    ok(/waiting for you below/.test(doc.getElementById("start").textContent) && !p.sent.includes("oirChecklist"), `held (${choice}): no new review offered on top of it`);
+    ok(!card.querySelector("button.x") && !Array.from(card.querySelectorAll("button")).some((b) => /Describe pages/.test(b.textContent)), `held (${choice}): can't be removed or re-described while waiting`);
+    const btn = Array.from(card.querySelectorAll(".hold button")).find((b) => b.textContent === label);
+    btn.click();
+    await sleep(50);
+    const m = p.msgs.find((x) => x.action === "oirResume");
+    ok(m && m.runId === "r3" && m.choice === choice && Array.from(card.querySelectorAll(".hold button")).every((b) => b.disabled), `held: "${label}" sends ${choice} once and disables the buttons`);
+  }
 })();

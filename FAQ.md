@@ -137,9 +137,16 @@ For Accelerate and Advanced, it also sets the record's **SingleView Setup** sect
   - SingleView and mobile tracking;
   - the test publishers;
   - the validation period and manual approval.
-- **Clean-up:** it deletes the programme's test transactions and fills blank record fields.
+- **Clean-up:** it fills blank record fields and, last, deletes the programme's test transactions. If anything needs a look, it keeps them and waits: see below.
 - **Report:** it posts a short report to Chatter that @mentions the integrator.
 - **Sign-off:** the **Tech sign-off stays with the integrator**.
+
+### Internal Review: why is it waiting before deleting the test transactions?
+If the review finds anything for a person to check (a fix that didn't stick, a value it doesn't change itself, a page it couldn't read, or a test transaction that isn't in Tracking diagnosis), it keeps the test transactions so you can look first. The panel lists what to check:
+- **Carry on and delete test transactions** deletes them, then updates the record and posts the report.
+- **Stop: keep them** leaves them in place, then updates the record and posts the report, which says they were kept.
+
+If everything passes, they're deleted straight away and nothing waits.
 
 ### Internal Review: the details aren't on the record. What now?
 Click **Enter the details by hand**, which opens every field at once. **Run Internal Review** is never greyed out: if something's missing, it says what.

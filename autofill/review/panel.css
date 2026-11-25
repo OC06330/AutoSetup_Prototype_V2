@@ -29,6 +29,11 @@ button:disabled { background: #c9c9c9; border-color: #c9c9c9; color: #fff; curso
 .run.done .status { color: #2e844a; }
 .run.blocked .status, .run.failed .status { color: #bc2f32; }
 .run.waiting_sf .status { color: #b45309; }
+.run.held { border-left-color: #d97706; }
+.run.held .status { color: #b45309; }
+.hold { background: #fff4e5; color: #5c3200; border-radius: 6px; padding: 8px 10px; margin: 8px 0; }
+.hold ul { margin: 4px 0 6px; padding-left: 18px; }
+.hold button { margin: 4px 6px 0 0; }
 .run .x { position: absolute; top: 4px; right: 6px; border: 0; background: none; color: #666; font-size: 16px; margin: 0; padding: 0 4px; }
 .steps { list-style: none; padding: 0; margin: 6px 0 0; }
 .steps li { display: flex; gap: 6px; padding: 2px 0; border-bottom: 1px solid #f2f2f2; }

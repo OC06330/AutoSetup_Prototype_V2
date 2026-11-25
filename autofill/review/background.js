@@ -7,7 +7,8 @@
 // Implementation record (MID + "signed in" needed):
 //  1. reads every Awin UI page (background tabs, group "IR <mid>")
 //  2. runs the checks and applies every automatic fix (set, save, reload, read back)
-//  3. deletes the programme's test transactions (after the pending transaction was read)
+//  3. deletes the programme's test transactions, last: at once if nothing needs a look, otherwise
+//     only when the TC chooses "Carry on and delete" in the panel (the run is held until then)
 //  4. updates the Salesforce fields and posts the short report to the record's Chatter
 // The run lives in chrome.storage.local (oirRun_<id>), which the panel renders.
 (function () {
@@ -399,8 +400,8 @@ async function startRun(msg) {
   const missing = C.missingInputs(msg.inputs);
   if (missing.length) return { ok: false, error: "missing: " + missing.join(", ") };
   const all = await chrome.storage.local.get(null);
-  if (Object.keys(all).some((k) => k.startsWith(RUN_PREFIX) && all[k].awinId === mid && ["running", "applying", "salesforce"].includes(all[k].state))) {
-    return { ok: false, error: `a review of MID ${mid} is already running` };
+  if (Object.keys(all).some((k) => k.startsWith(RUN_PREFIX) && all[k].awinId === mid && ["running", "applying", "salesforce", "held"].includes(all[k].state))) {
+    return { ok: false, error: `a review of MID ${mid} is already running or waiting for you` };
   }
   const id = crypto.randomUUID();
   await saveRun({
@@ -419,6 +420,32 @@ async function startRun(msg) {
     await closeGroup(id);
   });
   return { ok: true, runId: id };
+}
+
+// The panel's choice on a held run: "delete" (carry on and delete the test transactions) or "keep"
+// (stop: leave them for a manual check). Either way the review then updates Salesforce and posts
+// its report, which says which it was.
+async function resumeRun(id, choice) {
+  const run = await getRun(id);
+  if (!run || run.state !== "held") return { ok: false, error: "this review is not waiting for a choice" };
+  const keep = choice !== "delete";
+  await mutate(id, (r) => {
+    r.state = keep ? "salesforce" : "applying"; r.hold.choice = keep ? "keep" : "delete"; r.hold.chosenAt = Date.now();
+    const st = r.steps.find((x) => x.key === "hold"); if (st) { st.status = "ok"; st.detail = keep ? "stopped: kept for a manual check" : "carry on: deleting"; }
+  });
+  await runLog(id, "info", "test transactions", keep ? "kept: the TC stopped the review here" : "the TC chose to carry on and delete");
+  busy(true);
+  startWatchdog();
+  (async () => {
+    const c = (run.plan.changes || []).find((x) => x.target === "deleteTestTx");
+    if (!keep && c) await deleteStep(id, c, false);
+    await finishRun(id);
+  })().finally(() => busy(false)).catch(async (e) => {
+    await runLog(id, "error", "run", "stopped by an unexpected error:", e && e.stack ? e.stack : String(e));
+    await mutate(id, (r) => { r.state = "failed"; r.error = e.message || String(e); r.finishedAt = Date.now(); });
+    await closeGroup(id);
+  });
+  return { ok: true };
 }
 
 async function blocked(id, error, tabId) {
@@ -461,7 +488,8 @@ async function readPage(id, p, tabId, mid) {
 //  - Commission groups, MasterTag plugins and Tracking diagnosis start when Main settings gave {loc};
 //  - each page is fixed as soon as it has been read (Main settings also waits for the site check,
 //    which gives the Shopify domain);
-//  - test transactions are deleted as soon as Pending transactions and Tracking diagnosis are read.
+//  - test transactions go last, after every other read and fix: deleted at once if the report has
+//    nothing for a person to check, otherwise held (state "held") until the TC chooses in the panel.
 const NEEDS_LOC = ["commission", "plugins", "wizard"];
 const blankEntry = (c, error) => ({ id: c.id, page: c.area, field: c.field, from: c.from, to: c.to, verified: false, error });
 
@@ -543,7 +571,7 @@ async function pipeline(id) {
       if (e.signin) signinLost = true;
     }
   };
-  const label = (c) => `Fix: ${c.area} · ${c.field}${c.to && c.target !== "deleteTestTx" ? " → " + c.to : ""}`;
+  const label = (c) => `Fix: ${c.area} · ${c.field}${c.to ? " → " + c.to : ""}`;
 
   async function fixPage(pageKey, waitFor) {
     try {
@@ -567,7 +595,7 @@ async function pipeline(id) {
         await stepStart(id, "fix:" + c.id, label(c));
         if (signinLost) { await record([blankEntry(c, "not tried: the Awin UI asked for a sign-in")]); continue; }
         let e;
-        try { e = c.target === "deleteTestTx" ? await deleteTestTransactions(id, c) : await applyOne(id, c); }
+        try { e = await applyOne(id, c); }
         catch (err) { e = blankEntry(c, "unexpected error: " + err.message); }
         await record([e]);
       }
@@ -577,11 +605,47 @@ async function pipeline(id) {
   }
   const fixes = [
     fixPage("main", [readP.main, siteP]),
-    ...["commission", "plugins", "mobile", "prejoin", "migrated"].map((k) => fixPage(k, [readP[k]])),
-    // test transactions go only after the pending transaction and Tracking diagnosis were read
-    fixPage("testtx", [readP.testtx, readP.validate, readP.wizard])
+    ...["commission", "plugins", "mobile", "prejoin", "migrated"].map((k) => fixPage(k, [readP[k]]))
   ];
   await Promise.all([...Object.values(readP), siteP, ...fixes]);
+
+  // ---- test transactions, last: deleted only if nothing needs a look ----
+  const tx = (await getRun(id)).ui.testtx;
+  const del = tx && tx.ok ? (await planFor("testtx", (await getRun(id)).site))[0] : null;
+  if (del && !signinLost) {
+    const now = await getRun(id);
+    const look = C.needsLook({ ...now, result: C.runChecks({ inputs: now.inputs, sf: now.sf, ui: now.ui, site: now.site, today: today() }) });
+    if (look.length) {
+      await closeGroup(id);
+      await stepStart(id, "hold", "Test transactions: kept until you choose");
+      await mutate(id, (r) => {
+        r.state = "held"; r.step = "Waiting for you: check, then carry on or stop";
+        r.hold = { refs: del.from, look, at: Date.now() };
+        const st = r.steps.find((x) => x.key === "hold"); if (st) { st.status = "hold"; st.detail = `${look.length} thing(s) to check first`; }
+      });
+      await runLog(id, "warn", "test transactions", `kept (${del.from}): ${look.length} thing(s) need a look first`, look);
+      notify("Optimus IR: check before the test transactions go", `MID ${run0.awinId}: ${look.length} thing(s) need a look. Open the review panel to carry on or stop.`, run0);
+      return; // resumeRun() takes it from here
+    }
+  }
+  if (del) await deleteStep(id, del, signinLost);
+  await finishRun(id, signinTabs);
+}
+
+async function deleteStep(id, c, signinLost) {
+  await stepStart(id, "fix:" + c.id, `Fix: ${c.area} · ${c.field}`);
+  let e;
+  if (signinLost) e = blankEntry(c, "not tried: the Awin UI asked for a sign-in");
+  else {
+    try { e = await deleteTestTransactions(id, c); }
+    catch (err) { e = blankEntry(c, "unexpected error: " + err.message); }
+  }
+  await mutate(id, (r) => { r.applied = (r.applied || []).filter((a) => a.id !== e.id).concat(e); });
+  await stepEnd(id, "fix:" + e.id, e.verified ? "ok" : "fail", e.verified ? (e.refs || []).join(", ") : e.error);
+}
+
+async function finishRun(id, signinTabs = []) {
+  const run0 = await getRun(id);
   await closeGroup(id, signinTabs[0]);
   if (signinTabs.length) {
     await runLog(id, "error", "run", SIGNIN);
@@ -967,6 +1031,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     oirOpenPanel: () => openPanel(sender.tab, String(msg.mid || "").replace(/\D/g, "")),
     oirStart: () => startRun(msg),
     oirRetrySf: async () => { await finishSalesforce(msg.runId); return { ok: true }; },
+    oirResume: () => resumeRun(msg.runId, msg.choice),
     oirDescribe: () => describePages(msg.runId),
     oirChatterText: async () => { const r = await getRun(msg.runId); return r ? { ok: true, text: r.chatterText || C.chatterText(r) } : { ok: false }; }
   };

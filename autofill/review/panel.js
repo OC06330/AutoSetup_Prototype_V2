@@ -9,11 +9,12 @@ const OIR_VERSION = "0.2.23";
 const PREFIX = "oirRun_";
 const DONE_VISIBLE_MS = 10 * 60 * 1000;
 const ACTIVE = ["running", "applying", "salesforce"];
+const BUSY = [...ACTIVE, "held"]; // held: waiting for the TC before the test transactions are deleted
 const STATE = {
   running: "Reading the Awin UI…", applying: "Fixing…", salesforce: "Updating Salesforce…",
-  waiting_sf: "Salesforce step pending", done: "Done", blocked: "Stopped", failed: "Failed"
+  held: "Waiting for you: check before the test transactions are deleted", waiting_sf: "Salesforce step pending", done: "Done", blocked: "Stopped", failed: "Failed"
 };
-const ICON = { running: null, ok: "✅", fail: "❌", skip: "➖" };
+const ICON = { running: null, ok: "✅", fail: "❌", skip: "➖", hold: "⏸️" };
 const RES = { pass: "✅", fail: "❌", review: "⚠️", skipped: "➖" };
 
 let view = "scans";
@@ -79,10 +80,12 @@ async function renderStart(opts = {}) {
   if (!opts.force && recId) {
     const all = await chrome.storage.local.get(null);
     const recent = Object.keys(all).filter((k) => k.startsWith(PREFIX)).map((k) => all[k])
-      .filter((r) => r.recordId === recId[1] && (ACTIVE.includes(r.state) || Date.now() - (r.finishedAt || 0) < RECENT_MS))
+      .filter((r) => r.recordId === recId[1] && (BUSY.includes(r.state) || Date.now() - (r.finishedAt || 0) < RECENT_MS))
       .sort((a, b) => b.startedAt - a.startedAt)[0];
     if (recent) {
-      startAgainBox(ACTIVE.includes(recent.state)
+      startAgainBox(recent.state === "held"
+        ? `A review of MID ${recent.awinId} is waiting for you below: check, then carry on or stop.`
+        : ACTIVE.includes(recent.state)
         ? `A review of MID ${recent.awinId} is running for this record: follow it below.`
         : `A review of MID ${recent.awinId} finished ${Math.round((Date.now() - recent.finishedAt) / 60000)} min ago for this record: see it below.`);
       return;
@@ -329,6 +332,27 @@ function stepList(run) {
       h("span", {}, s.label, s.detail ? h("span", { class: "d" }, s.detail) : null))));
 }
 
+// A held run: what needs a look, the test transactions kept, and the TC's two choices
+function holdBox(run) {
+  const box = h("div", { class: "hold" });
+  const go = (choice, btn) => {
+    box.querySelectorAll("button").forEach((b) => { b.disabled = true; });
+    btn.textContent = choice === "delete" ? "Deleting…" : "Finishing…";
+    chrome.runtime.sendMessage({ action: "oirResume", runId: run.id, choice });
+  };
+  const testtx = (window.OIRFields.PAGES.find((p) => p.key === "testtx") || {}).url;
+  box.append(
+    h("div", {}, h("b", {}, "Test transactions kept: "), run.hold.refs || "—"),
+    h("div", {}, "Check these first (they'll also be in the Chatter report):"),
+    h("ul", {}, ...run.hold.look.map((l) => h("li", {}, l))));
+  const del = h("button", { class: "primary", onclick: () => go("delete", del) }, "Carry on and delete test transactions");
+  const keep = h("button", { onclick: () => go("keep", keep) }, "Stop: keep them");
+  const row = h("div", {}, del, keep);
+  if (testtx) row.append(h("button", { onclick: () => chrome.tabs.create({ url: testtx(), active: true }) }, "Open Test transactions"));
+  box.append(row, h("div", { class: "muted" }, "Either way, the review then updates Salesforce and posts its report. Stop leaves the test transactions in place and says so in the report."));
+  return box;
+}
+
 function card(run) {
   const el = h("div", { class: `box run ${run.state}` });
   el.append(h("div", {}, h("b", {}, run.name || "Programme"), ` · MID ${run.awinId}`));
@@ -342,6 +366,7 @@ function card(run) {
   }
   const showSteps = ACTIVE.includes(run.state) || view === "history" || run.state !== "done";
   if (showSteps) el.append(stepList(run));
+  if (run.state === "held" && run.hold) el.append(holdBox(run));
   else el.append(h("details", {}, h("summary", {}, "Steps"), stepList(run)));
 
   if (run.result) {
@@ -368,7 +393,7 @@ function card(run) {
       ...(run.steps || []).map((x) => `${x.status.toUpperCase()} ${x.label}${x.detail ? " · " + x.detail : ""}`), "", ...(run.log || [])].join("\n");
     await navigator.clipboard.writeText(log); copied = run.id + "l"; renderRuns(); setTimeout(() => { copied = ""; renderRuns(); }, 2500);
   } }, copied === run.id + "l" ? "Copied ✓" : "Copy debug log"));
-  if (!ACTIVE.includes(run.state)) {
+  if (!BUSY.includes(run.state)) {
     btns.append(h("button", { title: "Opens the Awin pages again and records their structure (labels, ids, columns; no values)",
       onclick: () => chrome.runtime.sendMessage({ action: "oirDescribe", runId: run.id }) }, "Describe pages"));
   }
@@ -376,7 +401,7 @@ function card(run) {
     await navigator.clipboard.writeText(JSON.stringify(run.diagnostics, null, 2)); copied = run.id + "d"; renderRuns(); setTimeout(() => { copied = ""; renderRuns(); }, 2500);
   } }, copied === run.id + "d" ? "Copied ✓" : "Copy page structure"));
   el.append(btns);
-  if (!ACTIVE.includes(run.state)) el.append(h("button", { class: "x", title: "Remove", onclick: () => chrome.storage.local.remove(PREFIX + run.id) }, "×"));
+  if (!BUSY.includes(run.state)) el.append(h("button", { class: "x", title: "Remove", onclick: () => chrome.storage.local.remove(PREFIX + run.id) }, "×"));
   return el;
 }
 
@@ -384,7 +409,7 @@ async function renderRuns() {
   const all = await chrome.storage.local.get(null);
   const now = Date.now();
   let runs = Object.keys(all).filter((k) => k.startsWith(PREFIX)).map((k) => all[k]).sort((a, b) => b.startedAt - a.startedAt);
-  if (view === "scans") runs = runs.filter((r) => ACTIVE.includes(r.state) || r.state === "waiting_sf" || now - (r.finishedAt || now) < DONE_VISIBLE_MS);
+  if (view === "scans") runs = runs.filter((r) => BUSY.includes(r.state) || r.state === "waiting_sf" || now - (r.finishedAt || now) < DONE_VISIBLE_MS);
   const box = document.getElementById("runs");
   // keep open <details> open across re-renders
   const openKeys = new Set(Array.from(box.querySelectorAll("details[open]")).map((d) => d.dataset.k));

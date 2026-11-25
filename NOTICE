@@ -41,7 +41,8 @@ NOTICE: who wrote what, and the terms of each part (see LICENSE)
    extension (paths, one wrapping function, the version line), its popup as a window
    tied to the record and restyled, the MID from the record, the shared sign-in check and edit lock,
    checking against the setup's Chatter note, page details from the setup's live pages,
-   faster page reads, and its settings as a block of the shared settings page. Details:
+   faster page reads, its settings as a block of the shared settings page, and the test
+   transactions deleted last, held for the TC's choice when something needs a look. Details:
    autofill/review/README.md.
 
 Third-party tools used only for development (not shipped in the extension):
