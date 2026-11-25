@@ -16,7 +16,7 @@
 > - **Page details from the setup's live pages:** Link Builder `#DeeplinkEnabled`, landing page `#GlobalClickThroughPage`, append `#ClickAppend`; pre-join publishers as tick boxes (value = the publisher id; none = already pre-joined); mobile tracking by the `strategy` radio "Tracking is implemented on mobile site"; approval by the "Approval of Publishers Joining" select, read and set by its option text.
 > - **Tabs:** as in Optimus IR, each Awin tab closes as soon as its read or fix is done, in a collapsed **IR \<MID\>** group (kept that way at the user's request, after trying the setup's open-group style in v3.0.5). They now open in the record's window.
 > - **Main settings no longer times out:** it counts as drawn as soon as `#MainWebsiteURL` or `#ClickAppend` shows (the labels may not match word for word); a page that keeps "loading" is read once it's drawn; a page with no sign of being drawn is taken as it is after 12 s; labels are found without measuring every element of the page; and Main settings gets the same two tries as the other pages.
-> - The Chatter report's first line names both versions: `Internal Review | MID … | Optimus IR v0.2.23 (3.0.15 AutoSetup prototype)`.
+> - The Chatter report's first line names both versions: `Internal Review | MID … | Optimus IR v0.2.23 (3.0.16 AutoSetup prototype)`.
 > - Tests run with the prototype's: `cd autofill/dev && npm test` (`tests/review-*.test.cjs`). In the paths below, `lib/`, `content/`, `background.js` and `popup.*` are under `autofill/review/` (`popup.*` is `panel.*`).
 
 **Runs the Internal Review of one Awin programme from its Salesforce Implementation record, in the background.**

@@ -1,78 +1,93 @@
-/* The toolbar popup: the same look as the Settings page (autofill/options.html), with each tool's colour. */
+/* The toolbar popup, in the extension's own look: the mascot's black jacket and the Awin flame
+   (amber, orange, red, sampled from assets/autosetup128.png and assets/awin-logo.png).
+   Always dark, in light and dark mode alike, like the icon. */
 :root {
-  --blue: #0176d3; --text: #181818; --muted: #5c5c5c; --line: #e5e5e5; --bg: #f3f3f3; --card: #fff;
-  --ok: #2e844a; --warn: #b45309; --bad: #ba0517; --on-blue: #fff;
-  --moonfill: #f5b933; --checklist: #0176d3; --setup: #06a59a; --review: #9050e9;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --blue: #4ea5ff; --text: #ececec; --muted: #a8a8a8; --line: #3a3a3a; --bg: #1b1b1b; --card: #262626;
-    --ok: #6fcf8f; --warn: #f0b35a; --bad: #ff8a80; --checklist: #4ea5ff; --on-blue: #0b1a2b;
-  }
+  color-scheme: dark;
+  --bg: #111; --card: #1b1b1b; --raised: #232323; --line: #2e2e2e;
+  --text: #f3f3f3; --muted: #a6a6a6; --ink: #1a0b00;   /* --ink: text on the flame */
+  --amber: #fca800; --orange: #fc6000; --red: #f01824;
+  --flame: linear-gradient(90deg, var(--amber), var(--orange) 55%, var(--red));
+  --accent: #ff7a1f;                                   /* links and outlines on the dark */
+  --ok: #4cc38a; --warn: #fcb400; --bad: #ff5a5f;
+  /* the four tools: flame shades, from the scan to the review */
+  --moonfill: #fcb400; --checklist: #fc8a00; --setup: #fc5400; --review: #f01824;
 }
 
 * { box-sizing: border-box; }
 body {
-  width: 360px; margin: 0; padding: 12px;
+  width: 360px; margin: 0; padding: 0 12px 12px;
   background: var(--bg); color: var(--text);
   font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 h1, h2, p { margin: 0; }
 .muted { color: var(--muted); }
+button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 
-/* header */
-.top { display: flex; align-items: center; gap: 10px; margin: 0 2px 10px; }
-.logo { width: 32px; height: 32px; flex: none; }
-.name { display: flex; align-items: baseline; gap: 6px; flex: 1; min-width: 0; }
-.name h1 { font-size: 17px; }
+/* header: the mascot, the name, the version, and a flame stripe under it */
+.top {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  margin: 0 -12px 12px; padding: 12px 14px 13px;
+  background: radial-gradient(120% 140% at 0% 0%, #2a1408 0%, #161010 45%, #0b0b0b 100%);
+}
+.top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--flame); }
+.logo { width: 44px; height: 44px; flex: none; border-radius: 11px; box-shadow: 0 0 0 2px rgba(252, 96, 0, .55), 0 0 12px rgba(252, 96, 0, .35); }
+.name { display: grid; flex: 1; min-width: 0; }
+.name h1 { font-size: 18px; font-weight: 800; letter-spacing: .2px; }
+.name .muted { font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent); }
 .version {
-  font-size: 11px; font-weight: 600; color: var(--muted);
-  border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; background: var(--card);
+  font-size: 11px; font-weight: 700; color: var(--amber);
+  border: 1px solid rgba(252, 168, 0, .45); border-radius: 999px; padding: 1px 8px;
 }
 
 /* cards */
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
-.card h2 { font-size: 13px; margin-bottom: 6px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+.card h2 { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
 
 /* the four tools */
 .tools { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-.tools li { display: grid; padding: 2px 0 2px 10px; border-left: 4px solid var(--tool); }
-.tools b { font-weight: 600; }
+.tools li {
+  display: grid; padding: 6px 8px 6px 10px; border-radius: 6px;
+  background: var(--raised); border-left: 4px solid var(--tool);
+}
+.tools b { font-weight: 700; }
 .tools span { color: var(--muted); font-size: 12px; }
-.tools i { font-style: normal; font-weight: 600; color: var(--text); }
+.tools i { font-style: normal; font-weight: 700; color: var(--text); }
 
 /* Moonpull scans (popup.js) */
 .scans-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .scans-head h2 { margin: 0; }
 button { font: inherit; cursor: pointer; }
 .link-btn, .job .act {
-  border: 1px solid var(--blue); border-radius: 4px; background: var(--card); color: var(--blue);
-  font-size: 12px; font-weight: 600; padding: 2px 10px;
+  border: 1px solid var(--accent); border-radius: 6px; background: transparent; color: var(--accent);
+  font-size: 12px; font-weight: 700; padding: 2px 10px;
 }
+.link-btn:hover, .job .act:hover { background: rgba(255, 122, 31, .12); }
 .job {
-  position: relative; background: var(--bg); border-radius: 6px; padding: 8px 28px 8px 10px;
-  margin-bottom: 8px; border-left: 4px solid var(--blue); font-size: 12px; line-height: 1.5;
+  position: relative; background: var(--raised); border-radius: 8px; padding: 8px 28px 8px 10px;
+  margin-bottom: 8px; border-left: 4px solid var(--orange); font-size: 12px; line-height: 1.5;
 }
 .job.ok { border-left-color: var(--ok); }
 .job.warn { border-left-color: var(--warn); }
 .job.bad { border-left-color: var(--bad); }
-.job b { font-weight: 600; }
-.job .status { font-weight: 600; }
-.job.busy .status { color: var(--blue); }
+.job b { font-weight: 700; color: var(--muted); }
+.job .status { font-weight: 700; }
+.job.busy .status { color: var(--accent); }
 .job.ok .status { color: var(--ok); }
 .job.warn .status { color: var(--warn); }
 .job.bad .status { color: var(--bad); }
 .job .when { color: var(--muted); }
 .job .dismiss { position: absolute; top: 2px; right: 6px; border: none; background: none; font-size: 16px; color: var(--muted); }
+.job .dismiss:hover { color: var(--text); }
 .job .act { margin: 6px 6px 0 0; }
-.job .act.primary { background: var(--blue); color: var(--on-blue); }
+.job .act.primary { background: var(--flame); color: var(--ink); border-color: transparent; }
 .empty { color: var(--muted); font-size: 12px; }
 #clearBtn { margin-top: 4px; }
 
 /* footer */
 footer { display: grid; gap: 8px; }
 footer .primary {
-  width: 100%; padding: 6px 14px; border-radius: 4px; border: 1px solid var(--blue);
-  background: var(--blue); color: var(--on-blue); font-weight: 600;
+  width: 100%; padding: 7px 14px; border-radius: 8px; border: none;
+  background: var(--flame); color: var(--ink); font-weight: 800; letter-spacing: .3px;
 }
+footer .primary:hover { filter: brightness(1.08); }
 .credits { color: var(--muted); font-size: 11px; text-align: center; }

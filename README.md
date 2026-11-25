@@ -151,7 +151,7 @@ Pages: 8 saved, 2 skipped.
 SingleView Setup: MasterTag Enabled, New.
 Implementation Status: Consultation (was Not Started).
 
-Posted by UI_AutoSetup_Prototype v3.0.15 AutoSetup prototype.
+Posted by UI_AutoSetup_Prototype v3.0.16 AutoSetup prototype.
 ```
 
 While the setup runs, the **Awin logo** at the front of the progress bar is a little pixel fire, flickering in the logo's own shape and colours. It stands still when the run ends.
@@ -314,6 +314,9 @@ See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 Questions, bugs and ideas: contact the tool's author above, or the project owner (Oscar Coleman). For Moonfill itself: [GitHub Issues](https://github.com/OptimusRodier/moonfill).
 
 ## What's new
+
+**The toolbar popup in the extension's own colours (3.0.16, 25 November 2026)**
+- The popup now matches the toolbar icon: dark, with the Awin flame's amber, orange and red, and the mascot in the header. It's no longer Salesforce blue on white, so it can't be mistaken for the old Moonfill menu. It stays dark in light mode too. The contents and buttons are unchanged.
 
 **The review keeps the test transactions when something needs a look (3.0.15, 25 November 2026)**
 - The Internal Review now deletes the test transactions last. If its report has anything for a person to check (a fix that didn't stick, a **To check**, a page not checked, or a test transaction that isn't in Tracking diagnosis), the review **keeps the test transactions** and waits. The panel lists what to check, with **Carry on and delete test transactions** and **Stop: keep them**. Either way it then updates the record and posts the report, which says whether they were deleted or kept. If everything passes, they're deleted straight away, as before.

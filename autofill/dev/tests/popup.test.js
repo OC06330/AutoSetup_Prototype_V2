@@ -13,7 +13,7 @@ async function popup(store = {}) {
   const {window} = dom;
   const calls = [];
   window.chrome = {
-    runtime: {getManifest: () => ({version: '3.0.15', version_name: '3.0.15 AutoSetup prototype'}), openOptionsPage: () => calls.push('options'), sendMessage: m => calls.push(m)},
+    runtime: {getManifest: () => ({version: '3.0.16', version_name: '3.0.16 AutoSetup prototype'}), openOptionsPage: () => calls.push('options'), sendMessage: m => calls.push(m)},
     storage: {local: {get: async () => ({...store}), remove: async () => {}}, onChanged: {addListener: () => {}}},
     tabs: {create: o => calls.push(o)}
   };
@@ -30,10 +30,10 @@ test('popup: names the extension and its version, and lists the four tools with 
   const {window, doc} = await popup();
   t.after(() => window.close());
   assert.equal(doc.querySelector('h1').textContent, 'UI AutoSetup');
-  assert.equal(doc.querySelector('.version').textContent, 'v3.0.15');
+  assert.equal(doc.querySelector('.version').textContent, 'v3.0.16');
   assert.deepEqual([...doc.querySelectorAll('.tools b')].map(b => b.textContent), ['🌙 Moonpull scan', '📋 Technical Checklist', '🚀 New Implementation', '🔎 Internal Review']);
   assert.match(doc.getElementById('empty').textContent, /No scans running/);
-  assert.equal(doc.querySelector('img[src="assets/autosetup48.png"]') !== null, true);
+  assert.equal(doc.querySelector('img[src="assets/autosetup128.png"]') !== null, true);
   assert.equal(doc.querySelector('#portfolioBtn, #githubBtn'), null, 'no personal links');
 });
 
@@ -55,4 +55,11 @@ test('popup: Settings opens the settings page; scans still show with Force paste
   assert.deepEqual([...cards[1].querySelectorAll('.act')].map(b => b.textContent), ['Force paste', 'Copy result']);
   cards[1].querySelector('.act.primary').click();
   assert.deepEqual(JSON.parse(JSON.stringify(calls.at(-1))), {action: 'forcePost', jobId: '2'});
+});
+
+test('popup: in the extension\'s own colours (the flame), not Moonfill\'s Salesforce blue', () => {
+  const css = read('css/style.css');
+  assert.doesNotMatch(css, /#0176d3/i, 'no Salesforce blue');
+  for (const c of ['#fca800', '#fc6000', '#f01824']) assert.match(css, new RegExp(c, 'i'));
+  assert.match(read('popup.html'), /<meta name="color-scheme" content="dark">/);
 });
