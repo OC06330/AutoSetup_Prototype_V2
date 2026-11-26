@@ -30,7 +30,7 @@ const fill = (w, values = VALUES, save = false) => w.TCASetupFill.fillPage(value
 
 // ---------- Pages ----------
 
-test('tracking settings: URLs, the query string by Platform Offer, two tick boxes; Save is enabled by the changes', async () => {
+test('tracking settings: URLs, the query string by Platform Offer, three tick boxes (awc too); Save is enabled by the changes', async () => {
   const body = `<input id="MainWebsiteURL" value="old"><input id="GlobalClickThroughPage" value="old"><input id="ClickAppend">
     <input type="checkbox" id="AppendAWC"><input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink" checked>
     <button type="submit" class="btn btn-disabled" disabled id="save">Save</button>`;
@@ -40,7 +40,7 @@ test('tracking settings: URLs, the query string by Platform Offer, two tick boxe
   assert.equal((await fill(w)).status, 'filled');
   const $ = id => w.document.getElementById(id);
   assert.deepEqual([$('MainWebsiteURL').value, $('GlobalClickThroughPage').value, $('ClickAppend').value], [VALUES.websiteUrl, VALUES.landingPage, 'source=aw&utm_source=awin&sv1=affiliate&sv_campaign_id=!!!id!!!']);
-  assert.deepEqual([$('DeeplinkEnabled').checked, $('NoDomainDeeplink').checked, $('AppendAWC').checked], [true, true, false], 'an already ticked box stays ticked');
+  assert.deepEqual([$('DeeplinkEnabled').checked, $('NoDomainDeeplink').checked, $('AppendAWC').checked], [true, true, true], 'awc and Link Builder ticked; an already ticked box stays ticked');
   assert.equal(w.saved, undefined, 'Fill only never saves');
 
   w = awin('/tracking-settings/us/awin/advertiser/123456/main-settings', body, enableOnInput);
@@ -53,7 +53,7 @@ test('tracking settings: URLs, the query string by Platform Offer, two tick boxe
 });
 
 test('tracking settings: for Access, the query string follows the site check: utm_source=awin with no e-commerce platform', async () => {
-  const body = '<input id="MainWebsiteURL"><input id="GlobalClickThroughPage"><input id="ClickAppend"><input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink"><button>Save</button>';
+  const body = '<input id="MainWebsiteURL"><input id="GlobalClickThroughPage"><input id="ClickAppend"><input type="checkbox" id="AppendAWC"><input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink"><button>Save</button>';
   const appendFor = async values => {
     const w = awin('/tracking-settings/us/awin/advertiser/123456/main-settings', body);
     assert.equal((await fill(w, {...VALUES, ...values})).status, 'filled');
@@ -113,18 +113,19 @@ test('tracking settings: waits for a new programme\'s form to appear, and finds 
       '<label for="w">Website URL</label><input id="w" type="text">' +
       '<label for="l">Landing Page</label><input id="l" type="text">' +
       '<label for="q">Default Query String Append</label><input id="q" type="text">' +
+      '<div class="row"><div>Awin Click ID (awc)</div><label><input type="checkbox" id="a"> Automatically append awc to all links</label></div>' +
       '<label><input type="checkbox" id="d"> Enable Link Builder for publishers</label>' +
       '<label><input type="checkbox" id="r"> Use relative URLs for deep links</label>'; }, 400);`);
   const result = await fill(w);
   assert.equal(result.status, 'filled', result.message);
   const $ = id => w.document.getElementById(id);
-  assert.deepEqual([$('w').value, $('l').value, $('q').value, $('d').checked, $('r').checked],
-    [VALUES.websiteUrl, VALUES.landingPage, 'source=aw&utm_source=awin&sv1=affiliate&sv_campaign_id=!!!id!!!', true, true]);
+  assert.deepEqual([$('w').value, $('l').value, $('q').value, $('a').checked, $('d').checked, $('r').checked],
+    [VALUES.websiteUrl, VALUES.landingPage, 'source=aw&utm_source=awin&sv1=affiliate&sv_campaign_id=!!!id!!!', true, true, true]);
 });
 
 test('tracking settings: if the page loads its saved settings over the typed values, they are typed again', async () => {
   const w = awin('/tracking-settings/us/awin/advertiser/123456/main-settings', `<input id="MainWebsiteURL"><input id="GlobalClickThroughPage"><input id="ClickAppend">
-    <input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink">`,
+    <input type="checkbox" id="AppendAWC"><input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink">`,
   `let late = true; document.addEventListener('input', () => {
      if (!late) return; late = false;
      setTimeout(() => { for (const id of ['MainWebsiteURL', 'GlobalClickThroughPage', 'ClickAppend']) document.getElementById(id).value = 'from the server'; }, 20);
@@ -138,7 +139,7 @@ test('tracking settings: if the page loads its saved settings over the typed val
 test('tracking settings: every "Add to Accepted Domains" prompt under a new address is clicked before saving', async () => {
   const w = awin('/tracking-settings/us/awin/advertiser/123456/main-settings', `<div><input id="MainWebsiteURL"><div class="warn" id="warn1" hidden>⚠ <span class="link">Add to Accepted Domains</span></div></div>
     <div><input id="GlobalClickThroughPage"><div class="warn" id="warn2" hidden>⚠ <span class="link">Add to Accepted Domains</span></div></div>
-    <input id="ClickAppend"><input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink"><button id="save">Save</button>`,
+    <input id="ClickAppend"><input type="checkbox" id="AppendAWC"><input type="checkbox" id="DeeplinkEnabled"><input type="checkbox" id="NoDomainDeeplink"><button id="save">Save</button>`,
   `document.getElementById('MainWebsiteURL').addEventListener('change', () => { document.getElementById('warn1').hidden = false; });
    document.getElementById('GlobalClickThroughPage').addEventListener('change', () => { document.getElementById('warn2').hidden = false; });
    window.accepted = 0;
@@ -170,7 +171,7 @@ test('commission groups: if the row can\'t be found, the result describes the pa
 test('a greyed-out Save is fine when the page already shows every value (nothing to save)', async () => {
   const body = `<input id="MainWebsiteURL" value="${VALUES.websiteUrl}"><input id="GlobalClickThroughPage" value="${VALUES.landingPage}">
     <input id="ClickAppend" value="source=aw&amp;utm_source=awin&amp;sv1=affiliate&amp;sv_campaign_id=!!!id!!!">
-    <input type="checkbox" id="DeeplinkEnabled" checked><input type="checkbox" id="NoDomainDeeplink" checked><button class="btn btn-disabled" disabled>Save</button>`;
+    <input type="checkbox" id="AppendAWC" checked><input type="checkbox" id="DeeplinkEnabled" checked><input type="checkbox" id="NoDomainDeeplink" checked><button class="btn btn-disabled" disabled>Save</button>`;
   const w = awin('/tracking-settings/us/awin/advertiser/123456/main-settings', body);
   const result = await fill(w, VALUES, true);
   assert.deepEqual([result.status, result.message], ['saved', 'Already up to date: nothing needed saving.']);

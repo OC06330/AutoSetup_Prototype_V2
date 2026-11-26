@@ -13,7 +13,7 @@ async function popup(store = {}) {
   const {window} = dom;
   const calls = [];
   window.chrome = {
-    runtime: {getManifest: () => ({version: '3.0.16', version_name: '3.0.16 AutoSetup prototype'}), openOptionsPage: () => calls.push('options'), sendMessage: m => calls.push(m)},
+    runtime: {getManifest: () => ({version: '3.0.17', version_name: '3.0.17 AutoSetup prototype'}), openOptionsPage: () => calls.push('options'), sendMessage: m => calls.push(m)},
     storage: {local: {get: async () => ({...store}), remove: async () => {}}, onChanged: {addListener: () => {}}},
     tabs: {create: o => calls.push(o)}
   };
@@ -30,7 +30,7 @@ test('popup: names the extension and its version, and lists the four tools with 
   const {window, doc} = await popup();
   t.after(() => window.close());
   assert.equal(doc.querySelector('h1').textContent, 'UI AutoSetup');
-  assert.equal(doc.querySelector('.version').textContent, 'v3.0.16');
+  assert.equal(doc.querySelector('.version').textContent, 'v3.0.17');
   assert.deepEqual([...doc.querySelectorAll('.tools b')].map(b => b.textContent), ['🌙 Moonpull scan', '📋 Technical Checklist', '🚀 New Implementation', '🔎 Internal Review']);
   assert.match(doc.getElementById('empty').textContent, /No scans running/);
   assert.equal(doc.querySelector('img[src="assets/autosetup128.png"]') !== null, true);

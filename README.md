@@ -123,7 +123,7 @@ You're asked only whether to save: **Run and save**, **Fill only** or **Cancel**
 
 | Page | What the setup does |
 |---|---|
-| Tracking settings | Website URL, Landing Page, query string append, Link Builder and relative URLs ticked, Add to Accepted Domains. Query string: Accelerate/Advanced `source=aw&utm_source=awin&sv1=affiliate&sv_campaign_id=!!!id!!!`. Access: `source=aw` if the client's site runs on one of the 13 supported e-commerce platforms, `utm_source=awin` if none is found, `source=aw` if the site can't be checked (detection not allowed in Settings, or the site doesn't load) |
+| Tracking settings | Website URL, Landing Page, query string append, Awin Click ID (awc), Link Builder and relative URLs ticked, Add to Accepted Domains. Query string: Accelerate/Advanced `source=aw&utm_source=awin&sv1=affiliate&sv_campaign_id=!!!id!!!`. Access: `source=aw` if the client's site runs on one of the 13 supported e-commerce platforms, `utm_source=awin` if none is found, `source=aw` if the site can't be checked (detection not allowed in Settings, or the site doesn't load) |
 | Invite user, Fee manager | skipped (they come pre-filled) |
 | Commission groups | Add Default Commission Group, then Transaction Type, Commission Type, Publisher Commission |
 | Plugin store | Not for Access. Otherwise adds **R.O.EYE - Consent - SingleView** with its code line. The page shows no confirmation after saving, so no error counts as saved |
@@ -151,7 +151,7 @@ Pages: 8 saved, 2 skipped.
 SingleView Setup: MasterTag Enabled, New.
 Implementation Status: Consultation (was Not Started).
 
-Posted by UI_AutoSetup_Prototype v3.0.16 AutoSetup prototype.
+Posted by UI_AutoSetup_Prototype v3.0.17 AutoSetup prototype.
 ```
 
 While the setup runs, the **Awin logo** at the front of the progress bar is a little pixel fire, flickering in the logo's own shape and colours. It stands still when the run ends.
@@ -314,6 +314,9 @@ See [`LICENSE`](LICENSE) and [`NOTICE`](NOTICE).
 Questions, bugs and ideas: contact the tool's author above, or the project owner (Oscar Coleman). For Moonfill itself: [GitHub Issues](https://github.com/OptimusRodier/moonfill).
 
 ## What's new
+
+**Setup ticks Awin Click ID (awc) (3.0.17, 26 November 2026)**
+- Page 1, Tracking settings, now ticks **Awin Click ID (awc)** ("Automatically append awc to all links") along with Link Builder and relative URLs. A box that's already ticked is left alone, and the save is checked as before. Before this, only the Internal Review switched awc on afterwards.
 
 **The toolbar popup in the extension's own colours (3.0.16, 25 November 2026)**
 - The popup now matches the toolbar icon: dark, with the Awin flame's amber, orange and red, and the mascot in the header. It's no longer Salesforce blue on white, so it can't be mistaken for the old Moonfill menu. It stays dark in light mode too. The contents and buttons are unchanged.

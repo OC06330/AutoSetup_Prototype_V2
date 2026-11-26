@@ -505,6 +505,7 @@
     ['MainWebsiteURL', 'Website URL', 'text'],
     ['GlobalClickThroughPage', 'Landing Page', 'text'],
     ['ClickAppend', 'Default Query String Append', 'text'],
+    ['AppendAWC', 'Awin Click ID (awc)', 'tick'],   // "Automatically append awc to all links"
     ['DeeplinkEnabled', 'Enable Link Builder for publishers', 'tick'],
     ['NoDomainDeeplink', 'Use relative URLs for deep links', 'tick']
   ];
